@@ -1,15 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:pilem/models/movie.dart';
 
-class DetailScreen extends StatelessWidget {
+class DetailScreen extends StatefulWidget {
   final Movie movie;
   const DetailScreen({super.key, required this.movie});
+
+  @override
+  State<DetailScreen> createState() => _DetailScreenState();
+}
+
+class _DetailScreenState extends State<DetailScreen> {
+  bool _isFavorite = false;
+
+  Future<void> _checkIsFavorite() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isFavorite = prefs.containsKey('movie_${widget.movie.id}')
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _checkIsFavorite();
+  }
+
+  Future<void> _toogleFavorite() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isFavorite = !_isFavorite;
+    });
+
+    if(_isFavorite) {
+      final String movieJson = jsonEncode(widget.movie.toJson());
+
+    } else {}
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(movie.title),
+        title: Text(widget.movie.title),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -18,7 +51,7 @@ class DetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Image.network(
-                "https://image.tmdb.org/t/p/w500${movie.posterPath}",
+                "https://image.tmdb.org/t/p/w500${widget.movie.posterPath}",
                 width: double.infinity,
                 height: 300,
                 fit: BoxFit.cover,
@@ -33,7 +66,7 @@ class DetailScreen extends StatelessWidget {
               const SizedBox(
                 height: 10,
               ),
-              Text(movie.overview),
+              Text(widget.movie.overview),
               const SizedBox(
                 height: 10,
               ),
@@ -51,7 +84,7 @@ class DetailScreen extends StatelessWidget {
                   SizedBox(
                     width: 10,
                   ),
-                  Text(movie.releaseDate),
+                  Text(widget.movie.releaseDate),
                 ],
               ),
               const SizedBox(
@@ -71,7 +104,7 @@ class DetailScreen extends StatelessWidget {
                   SizedBox(
                     width: 10,
                   ),
-                  Text(movie.voteAverage.toString()),
+                  Text(widget.movie.voteAverage.toString()),
                 ],
               ),
               const SizedBox(
