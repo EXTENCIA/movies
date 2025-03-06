@@ -1,7 +1,8 @@
 import 'dart:convert';
+import 'dart:ffi';
 
-import 'package:flutter/material.dart';
 import 'package:pilem/models/movie.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -18,15 +19,8 @@ class _DetailScreenState extends State<DetailScreen> {
   Future<void> _checkIsFavorite() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isFavorite = prefs.containsKey('movie_${widget.movie.id}');
+      _isFavorite = prefs.containsKey('movie${widget.movie.id}');
     });
-  }
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _checkIsFavorite();
   }
 
   Future<void> _toogleFavorite() async {
@@ -38,19 +32,23 @@ class _DetailScreenState extends State<DetailScreen> {
     if (_isFavorite) {
       final String movieJson = jsonEncode(widget.movie.toJson());
       prefs.setString('movie_${widget.movie.id}', movieJson);
-
       List<String> favoriteMovieIds =
           prefs.getStringList('favoriteMovies') ?? [];
       favoriteMovieIds.add(widget.movie.id.toString());
       prefs.setStringList('favoriteMovies', favoriteMovieIds);
     } else {
       prefs.remove('movie_${widget.movie.id}');
-
-      List<String> favoriteMovieIds =
+      List<String> favoriteMoviesIds =
           prefs.getStringList('favoriteMovies') ?? [];
-      favoriteMovieIds.add(widget.movie.id.toString());
-      prefs.setStringList('favoriteMovies', favoriteMovieIds);
+      favoriteMoviesIds.remove(widget.movie.id.toString());
+      prefs.setStringList('favoriteMovies', favoriteMoviesIds);
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIsFavorite();
   }
 
   @override
@@ -60,22 +58,35 @@ class _DetailScreenState extends State<DetailScreen> {
         title: Text(widget.movie.title),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: EdgeInsets.all(8.0),
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.network(
-                "https://image.tmdb.org/t/p/w500${widget.movie.posterPath}",
-                width: double.infinity,
-                height: 300,
-                fit: BoxFit.cover,
-              ),
+              Stack(children: [
+                Image.network(
+                  "https://image.tmdb.org/t/p/w500${widget.movie.backdropPath}",
+                  width: double.infinity,
+                  height: 300,
+                  fit: BoxFit.cover,
+                ),
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: IconButton(
+                    onPressed: _toogleFavorite,
+                    icon: Icon(
+                      _isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+              ]),
               const SizedBox(
                 height: 20,
               ),
               const Text(
-                "Overview : ",
+                "Overview: ",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(
@@ -88,18 +99,20 @@ class _DetailScreenState extends State<DetailScreen> {
               Row(
                 children: [
                   const Icon(
-                    Icons.star,
-                    color: Colors.amber,
+                    Icons.calendar_month,
+                    color: Color.fromARGB(255, 54, 246, 156),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(
+                    width: 10,
+                  ),
                   const Text(
-                    "Release Date : ",
+                    "Release Date: ",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(
                     width: 10,
                   ),
-                  Text(widget.movie.releaseDate),
+                  Text(widget.movie.releaseDate)
                 ],
               ),
               const SizedBox(
@@ -111,9 +124,11 @@ class _DetailScreenState extends State<DetailScreen> {
                     Icons.star,
                     color: Colors.amber,
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(
+                    width: 10,
+                  ),
                   const Text(
-                    "Rating : ",
+                    "Rating: ",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(
